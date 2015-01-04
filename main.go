@@ -107,7 +107,7 @@ func serveGetRequest(conn net.Conn, request_URL string) {
 			dirName := fileInfo.Name()
 			file_list, _ := ioutil.ReadDir(file_path)
 
-			file_name_list := make([]interface{}, len(file_list))
+			file_name_list := make([]interface{}, 0)
 
 			for _, file := range file_list {
 				map_item := map[string]interface{}{
