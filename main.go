@@ -6,6 +6,7 @@ import (
 	"github.com/hoisie/mustache"
 	"io/ioutil"
 	"net"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -81,7 +82,8 @@ func handleConnection(conn net.Conn) {
 	if HTTP_verb == "GET" {
 		str := "You requested " + request_URL + "!"
 		println(str)
-		serveGetRequest(conn, request_URL)
+		unescaped_request_url, _ := url.QueryUnescape(request_URL)
+		serveGetRequest(conn, unescaped_request_url)
 	}
 
 	conn.Close()
@@ -103,31 +105,37 @@ func serveGetRequest(conn net.Conn, request_URL string) {
 	} else {
 		switch {
 		case fileInfo.Mode().IsDir():
-			println("Its a directory")
 			dirName := fileInfo.Name()
 			file_list, _ := ioutil.ReadDir(file_path)
 
 			file_name_list := make([]interface{}, 0)
 
 			for _, file := range file_list {
+				file_name := file.Name()
+				file_url := url.QueryEscape(file_name)
+				file_is_dir := file.IsDir()
+				if file_is_dir && !strings.HasSuffix(file_url, "/") {
+					file_url += "/"
+				}
 				map_item := map[string]interface{}{
-					"file_name": file.Name(),
+					"file_name": file_name,
+					"url":       file_url,
 				}
 				file_name_list = append(file_name_list, map_item)
 			}
-			println(len(file_list), len(file_name_list))
 			template_map := map[string]interface{}{
 				"title": dirName,
 				"files": file_name_list,
 			}
 
 			page = mustache.RenderFile("templates/DirectoryList.moustache", template_map)
-			println("page: ", page)
+			// println("page: ", page)
+
 		case fileInfo.Mode().IsRegular():
 			data, _ := ioutil.ReadFile(file_path) // Catch error
 			page = string(data)
 		default:
-
+			page = "Server Error"
 		}
 	}
 	fmt.Fprintln(conn, page)

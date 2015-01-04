@@ -7,11 +7,11 @@
 <body>
 
 <table>
-    {{#files}}
+{{#files}}
     <tr>
-        <td>{{file_name}}</td>
+        <td><a href="{{url}}">{{file_name}}</a></td>
     </tr>
-    {{/files}}
+{{/files}}
 </table>
 
 </body>
