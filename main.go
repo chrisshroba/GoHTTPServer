@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/hoisie/mustache"
 	"io/ioutil"
 	"net"
 	"os"
@@ -90,9 +91,47 @@ func handleConnection(conn net.Conn) {
 func serveGetRequest(conn net.Conn, request_URL string) {
 	cwd, _ := os.Getwd()
 	file_path := path.Join(cwd, request_URL)
-	data, _ := ioutil.ReadFile(file_path) // Catch error
-	data_string := string(data)
-	fmt.Fprintln(conn, data_string)
+
+	var page string
+
+	// var filemode string
+
+	fileInfo, err := os.Stat(file_path) // TODO Check error
+
+	if err != nil {
+		page = err.Error()
+	} else {
+		switch {
+		case fileInfo.Mode().IsDir():
+			println("Its a directory")
+			dirName := fileInfo.Name()
+			file_list, _ := ioutil.ReadDir(file_path)
+
+			file_name_list := make([]interface{}, len(file_list))
+
+			for _, file := range file_list {
+				map_item := map[string]interface{}{
+					"file_name": file.Name(),
+				}
+				file_name_list = append(file_name_list, map_item)
+			}
+			println(len(file_list), len(file_name_list))
+			template_map := map[string]interface{}{
+				"title": dirName,
+				"files": file_name_list,
+			}
+
+			page = mustache.RenderFile("templates/DirectoryList.moustache", template_map)
+			println("page: ", page)
+		case fileInfo.Mode().IsRegular():
+			data, _ := ioutil.ReadFile(file_path) // Catch error
+			page = string(data)
+		default:
+
+		}
+	}
+	fmt.Fprintln(conn, page)
+
 }
 
 // Abstract request parsing,

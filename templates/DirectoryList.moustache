@@ -1,0 +1,17 @@
+<html>
+<head>
+    <title>
+        {{title}}
+    </title>
+</head>
+<body>
+
+<table>
+    {{#files}}
+    <tr>
+        <td>{{file_name}}</td>
+    </tr>
+    {{/files}}
+</table>
+
+</body>
